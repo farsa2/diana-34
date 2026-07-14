@@ -22,19 +22,26 @@ export const EVENT = {
   telegram: 'zelenova_diana',
 } as const
 
+/** Пути с учётом base GitHub Pages (/diana-34/) */
+export function assetUrl(path: string) {
+  const base = import.meta.env.BASE_URL
+  const normalized = path.replace(/^\//, '')
+  return `${base}${normalized}`
+}
+
 export const GALLERY = [
   {
-    src: '/gallery/pool.png',
+    src: assetUrl('gallery/pool.png'),
     alt: 'Бассейн с видом на город и горы',
     caption: 'Бассейн над долиной',
   },
   {
-    src: '/gallery/terrace.png',
+    src: assetUrl('gallery/terrace.png'),
     alt: 'Терраса с панорамным видом',
     caption: 'Панорама Барановки',
   },
   {
-    src: '/gallery/lounge.png',
+    src: assetUrl('gallery/lounge.png'),
     alt: 'Зона отдыха на террасе',
     caption: 'Место для разговоров',
   },

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Music2, Play, Volume2, VolumeX } from 'lucide-react'
+import { assetUrl } from '../data'
 
-const MUSIC_SRC = '/music/theme.mp3'
+const MUSIC_SRC = assetUrl('music/theme.mp3')
 
 export function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -9,7 +10,7 @@ export function MusicPlayer() {
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
   const [showIntro, setShowIntro] = useState(true)
-  const [missing, setMissing] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     const audio = new Audio(MUSIC_SRC)
@@ -18,8 +19,11 @@ export function MusicPlayer() {
     audio.volume = 0.45
     audioRef.current = audio
 
-    const onCanPlay = () => setReady(true)
-    const onError = () => setMissing(true)
+    const onCanPlay = () => {
+      setReady(true)
+      setFailed(false)
+    }
+    const onError = () => setFailed(true)
     const onPlay = () => setPlaying(true)
     const onPause = () => setPlaying(false)
 
@@ -27,6 +31,7 @@ export function MusicPlayer() {
     audio.addEventListener('error', onError)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+    audio.load()
 
     return () => {
       audio.pause()
@@ -46,6 +51,7 @@ export function MusicPlayer() {
       setMuted(false)
       await audio.play()
       setShowIntro(false)
+      setFailed(false)
     } catch {
       setShowIntro(true)
     }
@@ -55,8 +61,13 @@ export function MusicPlayer() {
     const audio = audioRef.current
     if (!audio) return
     if (audio.paused) {
-      await audio.play()
-      setShowIntro(false)
+      try {
+        await audio.play()
+        setShowIntro(false)
+        setFailed(false)
+      } catch {
+        setShowIntro(true)
+      }
     } else {
       audio.pause()
     }
@@ -68,8 +79,6 @@ export function MusicPlayer() {
     audio.muted = !audio.muted
     setMuted(audio.muted)
   }
-
-  if (missing) return null
 
   return (
     <>
@@ -84,7 +93,6 @@ export function MusicPlayer() {
         <button
           type="button"
           onClick={() => void start()}
-          disabled={!ready}
           className="relative liquid-glass-rose rounded-[2rem] px-8 py-8 sm:px-10 sm:py-10 text-center max-w-sm w-full hover:scale-[1.02] transition-transform duration-300"
         >
           <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--rose)]/20 text-[var(--rose-soft)]">
@@ -96,9 +104,14 @@ export function MusicPlayer() {
           <p className="mt-3 text-white/55 text-sm leading-relaxed">
             Нежный фон для приглашения — можно выключить в любой момент
           </p>
+          {failed && (
+            <p className="mt-3 text-[var(--rose-soft)] text-xs">
+              Не удалось загрузить трек. Попробуй ещё раз.
+            </p>
+          )}
           <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--rose)] text-[#1a0f14] px-5 py-2.5 text-sm font-semibold">
             <Play className="h-4 w-4" fill="currentColor" />
-            Начать
+            {ready ? 'Начать' : 'Загрузка…'}
           </span>
         </button>
       </div>
